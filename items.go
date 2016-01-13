@@ -4,82 +4,81 @@ import (
 	"database/sql"
 )
 
+type Item struct {
+	ASIN                string  `json:"asin,omitempty"`
+	AcoustID            string  `json:"acoustid,omitempty"`
+	AcoustIDFingerprint string  `json:"acoustid_fingerprint,omitempty"`
+	Added               float64 `json:"added,omitempty"`
+	Album               string  `json:"album,omitempty"`
+	AlbumArtist         string  `json:"album_artist,omitempty"`
+	AlbumArtistCredit   string  `json:"album_artist_credit,omitempty"`
+	AlbumArtistSort     string  `json:"album_artist_sort,omitempty"`
+	AlbumDisambig       string  `json:"album_disambig,omitempty"`
+	AlbumID             int     `json:"album_id,omitempty"`
+	AlbumStatus         string  `json:"album_status,omitempty"`
+	AlbumType           string  `json:"album_type,omitempty"`
+	Artist              string  `json:"artist,omitempty"`
+	ArtistCredit        string  `json:"artist_credit,omitempty"`
+	ArtistSort          string  `json:"artist_sort,omitempty"`
+	BPM                 int     `json:"bpm,omitempty"`
+	BitDepth            int     `json:"bitdepth,omitempty"`
+	BitRate             int     `json:"bitrate,omitempty"`
+	CatalogNum          string  `json:"catalog_num,omitempty"`
+	Channels            int     `json:"channels,omitempty"`
+	Comments            string  `json:"comments,omitempty"`
+	Comp                int     `json:"comp,omitempty"`
+	Composer            string  `json:"composer,omitempty"`
+	Country             string  `json:"country,omitempty"`
+	Day                 int     `json:"day,omitempty"`
+	Disc                int     `json:"disc,omitempty"`
+	DiscTitle           string  `json:"disc_title,omitempty"`
+	DiscTotal           int     `json:"disc_total,omitempty"`
+	Encoder             string  `json:"encoder,omitempty"`
+	Format              string  `json:"format,omitempty"`
+	Genre               string  `json:"genre,omitempty"`
+	Grouping            string  `json:"grouping,omitempty"`
+	ID                  int     `json:"id,omitempty"`
+	InitialKey          string  `json:"initial_key,omitempty"`
+	Label               string  `json:"label,omitempty"`
+	Language            string  `json:"language,omitempty"`
+	Length              float64 `json:"length,omitempty"`
+	Lyrics              string  `json:"lyrics,omitempty"`
+	MBAlbumArtistID     string  `json:"mb_album_artist_id,omitempty"`
+	MBAlbumID           string  `json:"mb_album_id,omitempty"`
+	MBArtistID          string  `json:"mb_artist_id,omitempty"`
+	MBReleaseGroupID    string  `json:"mb_release_group_id,omitempty"`
+	MBTrackID           string  `json:"mb_track_id,omitempty"`
+	MTime               float64 `json:"mtime,omitempty"`
+	Media               string  `json:"media,omitempty"`
+	Month               int     `json:"month,omitempty"`
+	OriginalDay         int     `json:"original_day,omitempty"`
+	OriginalMonth       int     `json:"original_month,omitempty"`
+	OriginalYear        int     `json:"original_year,omitempty"`
+	Path                string  `json:"path,omitempty"`
+	RGAlbumGain         float64 `json:"rg_album_gain,omitempty"`
+	RGAlbumPeak         float64 `json:"rg_album_peak,omitempty"`
+	RGTrackGain         float64 `json:"rg_track_gain,omitempty"`
+	RGTrackPeak         float64 `json:"rg_track_peak,omitempty"`
+	SampleRate          int     `json:"sample_rate,omitempty"`
+	Script              string  `json:"script,omitempty"`
+	Title               string  `json:"title,omitempty"`
+	Track               int     `json:"track,omitempty"`
+	TrackTotal          int     `json:"track_total,omitempty"`
+	Year                int     `json:"year,omitempty"`
+}
+
 const itemColumns = `
 		added, album, albumartist, albumartist_sort, album_id, albumtype, artist,
-		artist_sort, bitrate, day, disc, disctotal, id, label, length, month, path,
-		original_day, original_month, original_year, title, track, tracktotal, year
+		artist_sort, bitrate, day, disc, disctotal, genre, id, label, length,
+		month, title, track, tracktotal, year
 `
-
-type Item struct {
-	ASIN                string  `json:",omitempty"`
-	AcoustID            string  `json:",omitempty"`
-	AcoustIDFingerprint string  `json:",omitempty"`
-	Added               float64 `json:",omitempty"`
-	Album               string  `json:",omitempty"`
-	AlbumArtist         string  `json:",omitempty"`
-	AlbumArtistCredit   string  `json:",omitempty"`
-	AlbumArtistSort     string  `json:",omitempty"`
-	AlbumDisambig       string  `json:",omitempty"`
-	AlbumID             int     `json:",omitempty"`
-	AlbumStatus         string  `json:",omitempty"`
-	AlbumType           string  `json:",omitempty"`
-	Artist              string  `json:",omitempty"`
-	ArtistCredit        string  `json:",omitempty"`
-	ArtistSort          string  `json:",omitempty"`
-	BPM                 int     `json:",omitempty"`
-	BitDepth            int     `json:",omitempty"`
-	BitRate             int     `json:",omitempty"`
-	CatalogNum          string  `json:",omitempty"`
-	Channels            int     `json:",omitempty"`
-	Comments            string  `json:",omitempty"`
-	Comp                int     `json:",omitempty"`
-	Composer            string  `json:",omitempty"`
-	Country             string  `json:",omitempty"`
-	Day                 int     `json:",omitempty"`
-	Disc                int     `json:",omitempty"`
-	DiscTitle           string  `json:",omitempty"`
-	DiscTotal           int     `json:",omitempty"`
-	Encoder             string  `json:",omitempty"`
-	Format              string  `json:",omitempty"`
-	Genre               string  `json:",omitempty"`
-	Grouping            string  `json:",omitempty"`
-	ID                  int     `json:",omitempty"`
-	InitialKey          string  `json:",omitempty"`
-	Label               string  `json:",omitempty"`
-	Language            string  `json:",omitempty"`
-	Length              float64 `json:",omitempty"`
-	Lyrics              string  `json:",omitempty"`
-	MBAlbumArtistID     string  `json:",omitempty"`
-	MBAlbumID           string  `json:",omitempty"`
-	MBArtistID          string  `json:",omitempty"`
-	MBReleaseGroupID    string  `json:",omitempty"`
-	MBTrackID           string  `json:",omitempty"`
-	MTime               float64 `json:",omitempty"`
-	Media               string  `json:",omitempty"`
-	Month               int     `json:",omitempty"`
-	OriginalDay         int     `json:",omitempty"`
-	OriginalMonth       int     `json:",omitempty"`
-	OriginalYear        int     `json:",omitempty"`
-	Path                string  `json:",omitempty"`
-	RGAlbumGain         float64 `json:",omitempty"`
-	RGAlbumPeak         float64 `json:",omitempty"`
-	RGTrackGain         float64 `json:",omitempty"`
-	RGTrackPeak         float64 `json:",omitempty"`
-	SampleRate          int     `json:",omitempty"`
-	Script              string  `json:",omitempty"`
-	Title               string  `json:",omitempty"`
-	Track               int     `json:",omitempty"`
-	TrackTotal          int     `json:",omitempty"`
-	Year                int     `json:",omitempty"`
-}
 
 func (i *Item) Scan(rows *sql.Rows) error {
 	return rows.Scan(
 		&i.Added, &i.Album, &i.AlbumArtist, &i.AlbumArtistSort, &i.AlbumID,
 		&i.AlbumType, &i.Artist, &i.ArtistSort, &i.BitRate, &i.Day, &i.Disc,
-		&i.DiscTotal, &i.ID, &i.Label, &i.Length, &i.Month, &i.Path,
-		&i.OriginalDay, &i.OriginalMonth, &i.OriginalYear, &i.Title, &i.Track,
-		&i.TrackTotal, &i.Year,
+		&i.DiscTotal, &i.Genre, &i.ID, &i.Label, &i.Length, &i.Month, &i.Title,
+		&i.Track, &i.TrackTotal, &i.Year,
 	)
 }
 
