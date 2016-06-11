@@ -3,6 +3,7 @@ package beets
 import (
 	"database/sql"
 	"sort"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -40,7 +41,19 @@ func (b *Beets) GetItemsByArtist(artist string) ([]Item, error) {
 	}
 	defer rows.Close()
 
-	return ParseRowsAsItems(rows)
+	items, err := ParseRowsAsItems(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, item := range items {
+		items[i].Attributes, err = b.GetItemAttributes(item.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return items, nil
 }
 
 func (b *Beets) GetAlbumsByArtist(artist string) ([]Album, error) {
@@ -73,7 +86,39 @@ func (b *Beets) FilterAlbums(params map[string]string) ([]Album, error) {
 }
 
 func (b *Beets) FilterItems(params map[string]string) ([]Item, error) {
+	queries := make([]string, 0)
+	values := make([]interface{}, 0)
+
+	for key, value := range params {
+		queries = append(queries, key+" = ?")
+		values = append(values, value)
+	}
+
 	query := "select " + itemColumns + " from items where "
+	query += strings.Join(queries, " and ")
+
+	rows, err := b.db.Query(query, values...)
+	if err != nil {
+		return nil, err
+	}
+
+	items, err := ParseRowsAsItems(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, item := range items {
+		items[i].Attributes, err = b.GetItemAttributes(item.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return items, nil
+}
+
+func (b *Beets) FilterArtists(params map[string]string) ([]Artist, error) {
+	query := "select " + artistColumns + " from albums where "
 	values := make([]interface{}, 0)
 
 	for key, value := range params {
@@ -81,15 +126,18 @@ func (b *Beets) FilterItems(params map[string]string) ([]Item, error) {
 		values = append(values, value)
 	}
 
+	query += " group by albumartist"
+
 	rows, err := b.db.Query(query, values...)
 	if err != nil {
 		return nil, err
 	}
 
-	return ParseRowsAsItems(rows)
+	return ParseRowsAsArtists(rows)
 }
 
 func (b *Beets) SearchItems(query string) ([]Item, error) {
+	query = "%" + query + "%"
 	rows, err := b.db.Query(`
 		select `+itemColumns+` from items where
 			title LIKE ? OR artist LIKE ? OR album LIKE ?
@@ -99,7 +147,19 @@ func (b *Beets) SearchItems(query string) ([]Item, error) {
 	}
 	defer rows.Close()
 
-	return ParseRowsAsItems(rows)
+	items, err := ParseRowsAsItems(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, item := range items {
+		items[i].Attributes, err = b.GetItemAttributes(item.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return items, nil
 }
 
 func (b *Beets) GetAllItems() ([]Item, error) {
@@ -111,12 +171,24 @@ func (b *Beets) GetAllItems() ([]Item, error) {
 	}
 	defer rows.Close()
 
-	return ParseRowsAsItems(rows)
+	items, err := ParseRowsAsItems(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, item := range items {
+		items[i].Attributes, err = b.GetItemAttributes(item.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return items, nil
 }
 
 func (b *Beets) GetAllAlbums() ([]Album, error) {
 	rows, err := b.db.Query(`
-		select ` + albumColumns + ` from albums
+		select ` + albumColumns + ` from albums order by added desc
 	`)
 	if err != nil {
 		return nil, err
@@ -124,6 +196,22 @@ func (b *Beets) GetAllAlbums() ([]Album, error) {
 	defer rows.Close()
 
 	return ParseRowsAsAlbums(rows)
+}
+
+func (b *Beets) GetAllArtists() ([]Artist, error) {
+	q := `
+		select ` + artistColumns + `
+		from albums
+		group by albumartist
+		order by albumartist
+	`
+	rows, err := b.db.Query(q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return ParseRowsAsArtists(rows)
 }
 
 func (b *Beets) GetItemsInAlbum(albumID int) ([]Item, error) {
@@ -135,7 +223,19 @@ func (b *Beets) GetItemsInAlbum(albumID int) ([]Item, error) {
 	}
 	defer rows.Close()
 
-	return ParseRowsAsItems(rows)
+	items, err := ParseRowsAsItems(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, item := range items {
+		items[i].Attributes, err = b.GetItemAttributes(item.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return items, nil
 }
 
 func (b *Beets) GetItem(itemID int) (Item, error) {
@@ -156,6 +256,20 @@ func (b *Beets) GetItem(itemID int) (Item, error) {
 	}
 
 	return item, nil
+}
+
+func (b *Beets) GetItemAttributes(itemID int) (AttributeList, error) {
+	query := `
+		select ` + attributeColumns + ` from item_attributes where entity_id = ?
+	`
+
+	rows, err := b.db.Query(query, itemID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return ParseRowsAsAttributes(rows)
 }
 
 func (b *Beets) GetAlbum(albumID int) (Album, error) {
